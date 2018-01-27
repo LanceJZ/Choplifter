@@ -26,6 +26,13 @@ namespace Choplifter
             PlaneBasicEffect = new BasicEffect(game.GraphicsDevice);
         }
 
+        public Plane(Game game, Camera camera, Texture2D texture) : base(game)
+        {
+            TheCamera = camera;
+            PlaneBasicEffect = new BasicEffect(game.GraphicsDevice);
+            XNATexture = texture;
+        }
+
         public override void Initialize()
         {
             base.Initialize();
@@ -44,10 +51,15 @@ namespace Choplifter
             BaseWorld = Matrix.Identity;
 
             BaseWorld = Matrix.CreateScale(Scale)
-                * Matrix.CreateFromYawPitchRoll(Rotation.Y, Rotation.X, Rotation.Z + -MathHelper.PiOver2)
-                * Matrix.CreateTranslation(ParentPO.Position)
-                * Matrix.CreateFromYawPitchRoll(ParentPO.Rotation.Y, ParentPO.Rotation.X, ParentPO.Rotation.Z)
-                * Matrix.CreateTranslation(Position);
+                * Matrix.CreateFromYawPitchRoll(Rotation.Y, Rotation.X, Rotation.Z + -MathHelper.PiOver2);
+
+            if (Child)
+            {
+                BaseWorld *= Matrix.CreateTranslation(ParentPO.Position)
+                 * Matrix.CreateFromYawPitchRoll(ParentPO.Rotation.Y,
+                 ParentPO.Rotation.X, ParentPO.Rotation.Z)
+                 * Matrix.CreateTranslation(Position);
+            }
 
             // Set object and camera info
             PlaneBasicEffect.World = BaseWorld;

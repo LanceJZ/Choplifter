@@ -247,8 +247,8 @@ namespace Choplifter
                 {
                     foreach (PositionedObject po in ThePO.ParentPOs)
                     {
-                        TheModel.Root.Transform *= RotateMatrix(po.Rotation) *
-                            Matrix.CreateTranslation(po.Position);
+                        TheModel.Root.Transform *=
+                            RotateMatrix(po.Rotation) * Matrix.CreateTranslation(po.Position);
                     }
                 }
 
@@ -288,15 +288,6 @@ namespace Choplifter
             base.Draw(gameTime);
         }
         #endregion
-        public void AddAsChildOf(ModelEntity parent, bool activeDepedent)
-        {
-            ThePO.AddAsChildOf(parent.ThePO, activeDepedent);
-        }
-
-        public void AddAsChildOf(ModelEntity parent)
-        {
-            ThePO.AddAsChildOf(parent.ThePO);
-        }
         #region Spawn
         /// <summary>
         /// If position, rotation and velocity are used.
@@ -332,6 +323,15 @@ namespace Choplifter
         }
         #endregion
         #region Helper Methods
+        public void AddAsChildOf(ModelEntity parent)
+        {
+            ThePO.AddAsChildOf(parent.ThePO);
+        }
+
+        public void AddAsChildOf(ModelEntity parent, bool activeDepedent)
+        {
+            ThePO.AddAsChildOf(parent.ThePO, activeDepedent);
+        }
         /// <summary>
         /// Sets the model from a loaded XNA Model.
         /// </summary>
@@ -364,7 +364,7 @@ namespace Choplifter
 
         public Matrix RotateMatrix(Vector3 rotation)
         {
-            return Matrix.CreateFromYawPitchRoll(rotation.X, rotation.Y, rotation.Z);
+            return Matrix.CreateFromYawPitchRoll(rotation.Y, rotation.X, rotation.Z);
         }
         #endregion
     }

@@ -150,10 +150,9 @@ namespace Choplifter
                 Velocity += Acceleration * TheElapsedGameTime;
                 Position += Velocity * TheElapsedGameTime;
                 RotationVelocity += RotationAcceleration * TheElapsedGameTime;
-                Rotation = new Vector3(MathHelper.WrapAngle(Rotation.X +
-                    (RotationVelocity.X * TheElapsedGameTime)),
-                    MathHelper.WrapAngle(Rotation.Y + (RotationVelocity.Y * TheElapsedGameTime)),
-                    MathHelper.WrapAngle(Rotation.Z + (RotationVelocity.Z * TheElapsedGameTime)));
+                Rotation += RotationVelocity * TheElapsedGameTime;
+
+                Rotation = WrapAngle(Rotation);
             }
 
             if (IsChild)
@@ -184,6 +183,29 @@ namespace Choplifter
 
             base.Update(gameTime);
         }
+
+        Vector3 WrapAngle(Vector3 angle)
+        {
+            if (angle.X < 0)
+                angle.X += MathHelper.TwoPi;
+
+            if (angle.Y < 0)
+                angle.Y += MathHelper.TwoPi;
+
+            if (angle.Z < 0)
+                angle.Z += MathHelper.TwoPi;
+
+            if (angle.X > MathHelper.TwoPi)
+                angle.X -= MathHelper.TwoPi;
+
+            if (angle.Y > MathHelper.TwoPi)
+                angle.Y -= MathHelper.TwoPi;
+
+            if (angle.Z > MathHelper.TwoPi)
+                angle.Z -= MathHelper.TwoPi;
+
+            return angle;
+        }
         /// <summary>
         /// Add PO class or base PO class from AModel or Sprite as child of this class.
         /// Make sure all the parents of the parent are added before the children.
@@ -194,6 +216,9 @@ namespace Choplifter
         public virtual void AddAsChildOf(PositionedObject parent, bool activeDependent,
             bool directConnection)
         {
+            if (ParentPO != null)
+                return;
+
             ActiveDependent = activeDependent;
             DirectConnection = directConnection;
             Child = true;

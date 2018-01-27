@@ -15,6 +15,7 @@ namespace Choplifter
         Vector3 LookAt = Vector3.Forward;
         Vector3 BaseCameraReference = Vector3.Backward;
         public bool NeedViewResync = true;
+        public bool NeedLookUpResync;
         #endregion
 
         #region Properties
@@ -26,6 +27,9 @@ namespace Choplifter
         {
             get
             {
+                if (NeedLookUpResync)
+                    UpdateLookAt();
+
                 if (NeedViewResync)
                 {
                     CameraRotation = Matrix.CreateFromAxisAngle(CameraRotation.Forward, Rotation.Z)
@@ -41,7 +45,6 @@ namespace Choplifter
             }
         }
         #endregion
-
         #region Constructor
         public Camera(Game game, Vector3 position, Vector3 rotation, float aspectRatio,
             float nearClip, float farClip) : base(game)

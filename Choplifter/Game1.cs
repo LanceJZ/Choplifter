@@ -45,7 +45,7 @@ namespace EngineTest
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            TheCamera = new Camera(this, new Vector3(-50, 50, 500), new Vector3(0, MathHelper.Pi, 0),
+            TheCamera = new Camera(this, new Vector3(0, 0, 500), new Vector3(0, MathHelper.Pi, 0),
                 GraphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
 
             TheGame = new GameLogic(this, TheCamera);
