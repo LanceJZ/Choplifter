@@ -1,79 +1,62 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using XnaModel = Microsoft.Xna.Framework.Graphics.Model;
 using Microsoft.Xna.Framework.Audio;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using Engine;
 
-namespace MGChoplifter.Entities
+namespace Choplifter
 {
-    public class HouseControl : GameComponent, IBeginable, IUpdateableComponent, ILoadContent
+    class HouseControl : GameComponent
     {
-        AModel[] Houses = new AModel[4];
-        AModel[] OpenHouses = new AModel[4];
+        ModelEntity[] Houses = new ModelEntity[4];
+        ModelEntity[] OpenHouses = new ModelEntity[4];
 
         List<Person> People = new List<Person>();
 
-        ThePlayer PlayerRef;
+        Player PlayerRef;
+        GameLogic LogicRef;
+        Camera CameraRef;
 
-        XnaModel PersonMan;
-        XnaModel PersonArm;
-        XnaModel PersonLeg;
+        Model HouseModel;
+        Model HouseOpenModel;
 
         float Height = -230;
         float StartX = -6000;
         float DistanceBetween = 600;
 
-        public HouseControl(Game game, ThePlayer player) : base(game)
+        public HouseControl(Game game, Camera camera, GameLogic gameLogic) : base(game)
         {
-            PlayerRef = player;
-
-            for (int i = 0; i < Houses.Length; i++)
-            {
-                Houses[i] = new AModel(game);
-                OpenHouses[i] = new AModel(game);
-            }
+            PlayerRef = gameLogic.PlayerRef;
+            CameraRef = camera;
+            LogicRef = gameLogic;
 
             game.Components.Add(this);
-            LoadContent();
         }
 
         public override void Initialize()
         {
             base.Initialize();
+            LoadContent();
+            BeginRun();
         }
 
         public void LoadContent()
         {
-            Houses[0].LoadModel("CLHouse");
-            OpenHouses[0].LoadModel("CLHouseOpen");
-
-            for (int i = 1; i < Houses.Length; i++)
-            {
-                Houses[i].SetModel(Houses[0].XNAModel);
-                OpenHouses[i].SetModel(OpenHouses[0].XNAModel);
-            }
-
-            PersonMan = PlayerRef.Load("CLPersonMan");
-            PersonArm = PlayerRef.Load("CLPersonArm");
-            PersonLeg = PlayerRef.Load("CLPersonLeg");
-
-            PlayerRef.PersonMan = PersonMan;
-            PlayerRef.PersonArm = PersonArm;
-            PlayerRef.PersonLeg = PersonLeg;
-            BeginRun();
+            HouseModel = Helper.LoadModel("CLHouse");
+            HouseOpenModel = Helper.LoadModel("CLHouseOpen");
         }
 
         public void BeginRun()
         {
             for (int i = 0; i < Houses.Length; i++)
             {
+                Houses[i] = new ModelEntity(Game, CameraRef, HouseModel);
+                OpenHouses[i] = new ModelEntity(Game, CameraRef, HouseOpenModel);
                 Houses[i].Position = new Vector3(StartX - (i * DistanceBetween), Height, -100);
-                Houses[i].Radius = 32;
+                Houses[i].PO.Radius = 32;
                 OpenHouses[i].Position = Houses[i].Position;
-                OpenHouses[i].Active = false;
+                OpenHouses[i].Enabled = false;
             }
         }
 
@@ -81,42 +64,26 @@ namespace MGChoplifter.Entities
         {
             base.Update(gameTime);
 
-            foreach (AModel house in Houses)
+            for (int i = 0; i < Houses.Length; i++)
             {
-                if (house.Active)
+                if (Houses[i].Enabled)
                 {
                     foreach (Shot shot in PlayerRef.Shots)
                     {
-                        if (shot != null)
+                        if (shot.Enabled)
                         {
-                            if (shot.Active)
+                            if (Houses[i].PO.CirclesIntersect(shot.PO))
                             {
-                                if (house.CirclesIntersect(shot))
-                                {
-                                    HouseHit(house.Position);
-                                    house.Active = false;
-                                    shot.Active = false;
-                                    break;
-                                }
+                                Houses[i].Enabled = false;
+                                OpenHouses[i].Enabled = true;
+                                shot.Enabled = false;
+                                SpawnPeople(Houses[i].Position);
+                                break;
                             }
                         }
                     }
                 }
             }
-        }
-
-        void HouseHit(Vector3 position)
-        {
-            foreach (AModel house in OpenHouses)
-            {
-                if (house.Position == position)
-                {
-                    house.Active = true;
-                    break;
-                }
-            }
-
-            SpawnPeople(position);
         }
 
         void SpawnPeople(Vector3 position)
@@ -127,7 +94,7 @@ namespace MGChoplifter.Entities
 
                 foreach (Person man in People)
                 {
-                    if (!man.Active)
+                    if (!man.Enabled)
                     {
                         spawnNew = false;
                         man.Spawn(position, false);
@@ -137,14 +104,7 @@ namespace MGChoplifter.Entities
 
                 if (spawnNew)
                 {
-                    People.Add(new Person(Game, PlayerRef, PersonMan));
-
-                    for (int i = 0; i < 2; i++)
-                    {
-                        People.Last().Arms[i].SetModel(PersonArm);
-                        People.Last().Legs[i].SetModel(PersonLeg);
-                    }
-
+                    People.Add(new Person(Game, CameraRef, LogicRef));
                     People.Last().Spawn(position, false);
                 }
             }

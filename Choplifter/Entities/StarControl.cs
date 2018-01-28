@@ -28,7 +28,7 @@ namespace Choplifter
 
         public void LoadContent()
         {
-            StarModel = Helper.LoadModel("Core/Cube");
+            StarModel = Helper.LoadModel("Helper/Cube");
             BeginRun();
         }
 

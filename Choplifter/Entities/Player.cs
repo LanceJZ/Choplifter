@@ -30,6 +30,9 @@ namespace Choplifter
         Shot[] TheShots = new Shot[5];
         //Person[] ThePeopleOnboard = new Person[4];
         Model ShotModel;
+        Model PersonManModel;
+        Model PersonArmModel;
+        Model PersonLegModel;
         Timer FireTimer;
         Timer TurnTimer;
         Timer UnloadTimer;
@@ -37,9 +40,6 @@ namespace Choplifter
         KeyboardState KeyState;
         KeyboardState KeyStateOld;
 
-        public Model PersonMan;
-        public Model PersonLeg;
-        public Model PersonArm;
         float AccelerationAmount = 220;
         float MaxSpeed = 650;
         float Tilt = MathHelper.PiOver4 / 12f;
@@ -64,12 +64,13 @@ namespace Choplifter
         #endregion
         #region Properties
         public Shot[] Shots { get => TheShots; }
+        public float BoundLow { get => BoundLowY; }
         #endregion
         #region Base Methods
-        public Player(Game game, Camera camera, Model model) : base(game, camera, model)
+        public Player(Game game, Camera camera) : base(game, camera)
         {
-            Blade = new ModelEntity(game, camera, model);
-            Rotor = new ModelEntity(game, camera, model);
+            Blade = new ModelEntity(game, camera);
+            Rotor = new ModelEntity(game, camera);
             FireTimer = new Timer(game, FireRate);
             TurnTimer = new Timer(game, TurnRate);
             UnloadTimer = new Timer(game, UnloadRate);
@@ -78,11 +79,12 @@ namespace Choplifter
 
         public override void Initialize()
         {
-            //Radius = 26;
+            PO.Radius = 26;
             Facing = Direction.Right;
             State = CurrentState.Flight;
             NumberOfPassengers = 0; //TODO: For testing. Should be zero.
             ShotLimit = Shots.Length;
+
             base.Initialize();
         }
 
@@ -91,8 +93,6 @@ namespace Choplifter
             LoadModel("ChopperBody");
             Blade.LoadModel("ChopperBlade");
             Rotor.LoadModel("ChopperRotor");
-            ShotModel = Helper.LoadModel("Core/Cube");
-            //TODO: Load Person models.
             base.LoadContent();
         }
 
@@ -119,7 +119,7 @@ namespace Choplifter
 
             for (int i = 0; i < Shots.Length; i++)
             {
-                Shots[i] = new Shot(Game, TheCamera, ShotModel);
+                Shots[i] = new Shot(Game, TheCamera);
             }
 
             base.BeginRun();
@@ -136,6 +136,7 @@ namespace Choplifter
             if (Coasting)
                 WindResistance();
 
+            CheckPosition();
             GetInput();
 
             base.Update(gameTime);
@@ -226,7 +227,6 @@ namespace Choplifter
                 {
                     MoveHorizontal = 1;
                     MoveX(new Vector3(-AccelerationAmount, 0, 0));
-                    CheckPosition();
                     Coasting = false;
                 }
                 else
@@ -239,9 +239,8 @@ namespace Choplifter
 
                 if (Position.X < BoundRightX)
                 {
-                    MoveHorizontal = -1;
+                    MoveHorizontal = 1;
                     MoveX(new Vector3(AccelerationAmount, 0, 0));
-                    CheckPosition();
                     Coasting = false;
                 }
                 else
@@ -257,7 +256,6 @@ namespace Choplifter
                 {
                     MoveY(new Vector3(0, AccelerationAmount * 0.2f, 0));
 
-                    CheckPosition();
                     Coasting = false;
                 }
                 else
@@ -272,7 +270,6 @@ namespace Choplifter
                 {
                     MoveY(new Vector3(0, -AccelerationAmount * 0.4f, 0));
 
-                    CheckPosition();
                     Coasting = false;
                 }
                 else
@@ -329,14 +326,14 @@ namespace Choplifter
 
         void StopMovementX()
         {
-            Velocity = new Vector3(0, Velocity.Y, 0);
-            Acceleration = new Vector3(0, Acceleration.Y, 0);
+            PO.Velocity.X = 0;
+            PO.Acceleration.X = 0;
         }
 
         void StopMovementY()
         {
-            Velocity = new Vector3(Velocity.X, 0, 0);
-            Acceleration = new Vector3(Acceleration.X, 0, 0);
+            PO.Velocity.Y = 0;
+            PO.Acceleration.Y = 0;
         }
 
         void CheckPosition()
@@ -344,6 +341,16 @@ namespace Choplifter
             if (Position.Y < BoundLowY + 0.05f)
             {
                 StopMovementX();
+                StopMovementY();
+            }
+
+            if (Position.X < BoundLeftX || Position.X > BoundRightX)
+            {
+                StopMovementX();
+            }
+
+            if (Position.Y > BoundHighY)
+            {
                 StopMovementY();
             }
 
@@ -383,76 +390,49 @@ namespace Choplifter
                 case Direction.Left:
                     ChangeXTilt();
 
-                    if (Rotation.Z > ((MoveHorizontal * -Tilt) + (Velocity.X * comp)))
-                    {
-                        PO.RotationVelocity.Z = -RotateRate * 0.25f;
-                    }
-                    else
-                    {
-                        PO.Rotation.Z = (MoveHorizontal * -Tilt) + (Velocity.X * comp);
-                    }
+                    //PO.Rotation.Z = MathHelper.TwoPi - Tilt;
+
+                    PO.Rotation.Z = (MoveHorizontal * (MathHelper.TwoPi - Tilt))
+                        + (Velocity.X * comp);
+
                     break;
 
                 case Direction.Right:
                     ChangeXTilt();
 
-                    if (Rotation.Z < (MoveHorizontal * Tilt) - (Velocity.X * comp))
-                    {
-                        PO.RotationVelocity.Z = RotateRate * 0.25f;
-                    }
-                    else
-                    {
-                        PO.Rotation.Z = (MoveHorizontal * Tilt) - (Velocity.X * comp);
-                    }
+                    PO.Rotation.Z = (MoveHorizontal * Tilt) - (Velocity.X * comp);
+
                     break;
 
                 case Direction.ForwardFromRight:
                 case Direction.ForwardFromLeft:
 
-                    if (Rotation.X > (MoveHorizontal * Tilt) - (Velocity.X * 0.5f * comp))
-                    {
-                        PO.RotationVelocity.X = -RotateRate * 0.25f;
-                    }
-                    else
-                    {
-                        PO.Rotation.X = (MoveHorizontal * Tilt) - (Velocity.X * 0.5f * comp);
-                    }
+                    PO.Rotation.X = (MoveHorizontal * Tilt) - (Velocity.X * 0.5f * comp);
 
-                    if (Rotation.X < (MoveHorizontal * Tilt) - (Velocity.X * 0.5f * comp))
-                    {
-                        PO.RotationVelocity.X = RotateRate * 0.25f;
-                    }
-                    else
-                    {
-                        PO.Rotation.X = (MoveHorizontal * Tilt) - (Velocity.X * 0.5f * comp);
-                    }
+                    PO.RotationVelocity.Z = 0;
 
-                    RotationVelocity = new Vector3(RotationVelocity.X, RotationVelocity.Y, 0);
-
-                    if (Rotation.Z < 0)
+                    if (Rotation.Z < MathHelper.TwoPi && Rotation.Z > MathHelper.Pi)
                     {
                         PO.RotationVelocity.Z = RotateRate * 0.25f;
                     }
-                    else if (Rotation.Z > 0)
+                    else if (Rotation.Z > 0.05f && Rotation.Z < MathHelper.PiOver4)
                     {
                         PO.RotationVelocity.Z = -RotateRate * 0.25f;
                     }
 
                     break;
             }
-
-            //Rotation.Z = MathHelper.Clamp(Rotation.Z, -MathHelper.PiOver4 * 0.5f, MathHelper.PiOver4 * 0.5f);
         }
 
         void ChangeXTilt()
         {
             PO.RotationVelocity.X = 0;
 
-            if (Rotation.X < 0)
+            if (Rotation.X > MathHelper.Pi && Rotation.X < MathHelper.TwoPi - MathHelper.PiOver4)
             {
                 PO.RotationVelocity.X = RotateRate * 0.25f;
             }
-            else if (Rotation.X > 0)
+            else if (Rotation.X > MathHelper.TwoPi)
             {
                 PO.RotationVelocity.X = -RotateRate * 0.25f;
             }

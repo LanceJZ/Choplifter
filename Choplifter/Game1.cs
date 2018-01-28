@@ -13,6 +13,8 @@ namespace EngineTest
         SpriteBatch SB;
         GameLogic TheGame;
         Camera TheCamera;
+        KeyboardState OldKeyState;
+        bool PauseGame = false;
 
         public Game1()
         {
@@ -44,7 +46,6 @@ namespace EngineTest
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
             TheCamera = new Camera(this, new Vector3(0, 0, 500), new Vector3(0, MathHelper.Pi, 0),
                 GraphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
 
@@ -85,9 +86,18 @@ namespace EngineTest
                 Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            KeyboardState KBS = Keyboard.GetState();
 
-            base.Update(gameTime);
+            if (TheGame.CurrentMode == GameState.InPlay)
+            {
+                if (!OldKeyState.IsKeyDown(Keys.P) && KBS.IsKeyDown(Keys.P))
+                    PauseGame = !PauseGame;
+            }
+
+            OldKeyState = Keyboard.GetState();
+
+            if (!PauseGame)
+                base.Update(gameTime);
         }
 
         /// <summary>
@@ -97,8 +107,6 @@ namespace EngineTest
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.DarkSlateBlue);
-
-            // TODO: Add your drawing code here
 
             base.Draw(gameTime);
         }

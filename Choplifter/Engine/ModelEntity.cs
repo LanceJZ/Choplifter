@@ -114,6 +114,14 @@ namespace Choplifter
         }
         #endregion
         #region Constructor
+        public ModelEntity(Game game, Camera camera) : base(game)
+        {
+            TheCamera = camera;
+            ThePO = new PositionedObject(game);
+
+            game.Components.Add(this);
+        }
+
         public ModelEntity(Game game, Camera camera, Model model) : base(game)
         {
             TheCamera = camera;

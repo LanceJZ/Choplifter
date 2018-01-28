@@ -37,10 +37,10 @@ namespace Choplifter
             {
                 char letter = (char)(i + 65);
 
-                WordXNAModels[i] = Helper.LoadModel("Core/" + letter.ToString());
+                WordXNAModels[i] = Helper.LoadModel("Helper/" + letter.ToString());
             }
 
-            WordXNAModels[26] = Helper.LoadModel("Core/UnderLine");
+            WordXNAModels[26] = Helper.LoadModel("Helper/UnderLine");
         }
 
         public void ProcessWords(string words, Vector3 locationStart, float scale)

@@ -10,7 +10,7 @@ namespace Choplifter
     {
         Timer LifeTimer;
 
-        public Shot(Game game, Camera camera, Model model) : base(game, camera, model)
+        public Shot(Game game, Camera camera) : base(game, camera)
         {
             LifeTimer = new Timer(game);
         }
@@ -20,7 +20,13 @@ namespace Choplifter
             base.Initialize();
 
             Enabled = false;
-            //Radius = 2;
+            PO.Radius = 2;
+        }
+
+        protected override void LoadContent()
+        {
+            LoadModel("Core/Cube");
+            base.LoadContent();
         }
 
         public override void Update(GameTime gameTime)

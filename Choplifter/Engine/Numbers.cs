@@ -34,7 +34,7 @@ namespace Choplifter
         {
             for (int i = 0; i < 10; i++)
             {
-                NumberModels[i] = Helper.LoadModel("Core/" + i.ToString());
+                NumberModels[i] = Helper.LoadModel("Helper/" + i.ToString());
             }
         }
 

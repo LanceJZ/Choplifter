@@ -10,7 +10,7 @@ public enum GameState
 {
     Over,
     InPlay,
-    HighScore,
+    HighSHelper,
     MainMenu
 };
 
@@ -22,19 +22,28 @@ namespace Choplifter
         Background TheBackground;
         Player ThePlayer;
 
+
+
+        Timer FPSTimer;
+        float FPSFrames = 0;
+
         GameState GameMode = GameState.MainMenu;
         KeyboardState OldKeyState;
 
         public GameState CurrentMode { get => GameMode; }
         public Player PlayerRef { get => ThePlayer; }
+        public Background BackgroundRef { get => TheBackground; }
 
         public GameLogic(Game game, Camera camera) : base(game)
         {
             TheCamera = camera;
 
-            ThePlayer = new Player(game, camera, null);
-
+            ThePlayer = new Player(game, camera);
             TheBackground = new Background(game, camera, this);
+
+
+
+            FPSTimer = new Timer(game, 1);
             // Screen resolution is 1200 X 900.
             // Y positive is Up.
             // X positive is right of window when camera is at rotation zero.
@@ -45,20 +54,19 @@ namespace Choplifter
 
         public override void Initialize()
         {
+            GameMode = GameState.InPlay;
 
             base.Initialize();
             LoadContent();
+            BeginRun();
         }
 
         public void LoadContent()
         {
-
-            BeginRun();
         }
 
         public void BeginRun()
         {
-
         }
 
         public override void Update(GameTime gameTime)
@@ -73,6 +81,15 @@ namespace Choplifter
             }
 
             OldKeyState = Keyboard.GetState();
+
+            FPSFrames++;
+
+            if (FPSTimer.Elapsed)
+            {
+                FPSTimer.Reset();
+                System.Diagnostics.Debug.WriteLine("FPS " + FPSFrames.ToString());
+                FPSFrames = 0;
+            }
 
             base.Update(gameTime);
         }

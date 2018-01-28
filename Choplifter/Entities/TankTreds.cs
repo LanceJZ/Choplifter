@@ -1,51 +1,49 @@
 ﻿using Microsoft.Xna.Framework;
-using XnaModel = Microsoft.Xna.Framework.Graphics.Model;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Audio;
 using System.Collections.Generic;
 using System;
-using Engine;
 
-namespace MGChoplifter.Entities
+namespace Choplifter
 {
-    public class TankTred : PositionedObject, ILoadContent
+    class TankTreds : PositionedObject
     {
-        AModel[] TredAnimations = new AModel[2];
+        ModelEntity[] TredAnimations = new ModelEntity[2];
+        Camera CameraRef;
         Timer AnimationTimer;
 
         public bool Moving;
 
-        public TankTred(Game game) : base(game)
+        public TankTreds(Game game, Camera camera) : base(game)
         {
-            for (int i = 0; i < 2; i++)
-            {
-                TredAnimations[i] = new AModel(game);
-                TredAnimations[i].AddAsChildOf(this, true, false);
-            }
-
+            CameraRef = camera;
             AnimationTimer = new Timer(game, 0.1f);
 
-            LoadContent();
+            for (int i = 0; i < 2; i++)
+            {
+                TredAnimations[i] = new ModelEntity(game, camera);
+                TredAnimations[i].PO.AddAsChildOf(this);
+            }
         }
 
         public override void Initialize()
         {
             base.Initialize();
+            LoadContent();
         }
 
         public void LoadContent()
         {
-            TredAnimations[0].SetModel(Game.Content.Load<XnaModel>("Models/CLTankTred1"));
-            TredAnimations[1].SetModel(Game.Content.Load<XnaModel>("Models/CLTankTred2"));
-            BeginRun();
+            TredAnimations[0].SetModel(Game.Content.Load<Model>("Models/TankTred1"));
+            TredAnimations[1].SetModel(Game.Content.Load<Model>("Models/TankTred2"));
         }
 
         public override void BeginRun()
         {
             base.BeginRun();
 
-            TredAnimations[1].Visable = false;
+            TredAnimations[1].Enabled = false;
         }
 
         public override void Update(GameTime gameTime)
@@ -58,7 +56,7 @@ namespace MGChoplifter.Entities
 
                 for(int i = 0; i < 2; i++)
                 {
-                    TredAnimations[i].Visable = !TredAnimations[i].Visable;
+                    TredAnimations[i].Enabled = !TredAnimations[i].Enabled;
                 }
             }
         }

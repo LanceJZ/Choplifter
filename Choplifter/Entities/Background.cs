@@ -8,6 +8,7 @@ namespace Choplifter
 {
     class Background : GameComponent
     {
+        #region Fields
         GameLogic LogicRef;
         Player PlayerRef;
         Camera TheCamera;
@@ -15,17 +16,20 @@ namespace Choplifter
         ModelEntity Base;
 
         Plane[] Grass = new Plane[51];
-        ModelEntity[] Blockades = new ModelEntity[4];
+        ModelEntity[] Barricades = new ModelEntity[4];
 
-        Model BlockadeModel;
+        Model BarricadeModel;
         Model PlayerBaseModel;
         Texture2D GrassTexture;
 
         float spaceBetweenGrass = 85;
         float GrassEdge = 600;
         float[] GrassX;
-        float[] BlocksX;
-
+        #endregion
+        #region Properties
+        public PositionedObject BasePosition { get=> Base.PO; }
+        public float BarricadePositionX { get => Barricades[0].Position.X; }
+        #endregion
         public Background(Game game, Camera camera, GameLogic gameLogic) : base(game)
         {
             LogicRef = gameLogic;
@@ -33,7 +37,6 @@ namespace Choplifter
             TheCamera = camera;
 
             GrassX = new float[Grass.Length];
-            BlocksX = new float[Blockades.Length];
 
             Stars = new StarControl(game, camera);
 
@@ -50,7 +53,7 @@ namespace Choplifter
         public void LoadContent()
         {
             PlayerBaseModel = Helper.LoadModel("Base");
-            BlockadeModel = Helper.LoadModel("Blockade");
+            BarricadeModel = Helper.LoadModel("Barricade");
             GrassTexture = Helper.LoadTexture("Grass");
 
             BeginRun();
@@ -63,44 +66,44 @@ namespace Choplifter
                 Grass[i] = new Plane(Game, TheCamera, GrassTexture);
             }
 
-            for (int i = 0; i < Blockades.Length; i++)
+            for (int i = 0; i < Barricades.Length; i++)
             {
-                Blockades[i] = new ModelEntity(Game, TheCamera, BlockadeModel);
+                Barricades[i] = new ModelEntity(Game, TheCamera, BarricadeModel);
             }
 
             Base = new ModelEntity(Game, TheCamera, PlayerBaseModel, new Vector3(100, -150, -10));
 
-            float spaceBetweenBlocks = -8;
-            float startGrassX = 10 + -spaceBetweenGrass * (int)(Grass.Length / 6);
-            float startGrassY = -267;
+            float spaceBetweenBlocks = -50;
+            float startGrassX = 10 + -spaceBetweenGrass * (Grass.Length / 6);
+            float startGrassZ = 128;
             float startBlockX = -600;
-            float startBlockY = -250;
+            float startBlockY = -150;
 
-            for (int i = 0; i < (int)(Grass.Length / 3); i++)
+            for (int i = 0; i < (Grass.Length / 3); i++)
             {
-                Grass[i].Position.X = startGrassX + (i * spaceBetweenGrass);
-                Grass[i].Position.Y = startGrassY;
+                Grass[i].PO.Position.X = startGrassX + (i * spaceBetweenGrass);
+                Grass[i].PO.Position.Z = startGrassZ;
 
-                int leveltwo = i + (int)(Grass.Length / 3);
-                int levelthree = i + (int)(Grass.Length / 3) * 2;
+                int leveltwo = i + (Grass.Length / 3);
+                int levelthree = i + (Grass.Length / 3) * 2;
 
-                Grass[leveltwo].Position.X = startGrassX + (i * spaceBetweenGrass);
-                Grass[leveltwo].Position.Y = startGrassY - spaceBetweenGrass * 0.75f;
-                Grass[levelthree].Position.X = startGrassX + (i * spaceBetweenGrass);
-                Grass[levelthree].Position.Y = startGrassY - (spaceBetweenGrass * 1.7f);
+                Grass[leveltwo].PO.Position.X = startGrassX + (i * spaceBetweenGrass);
+                Grass[leveltwo].PO.Position.Z = startGrassZ - spaceBetweenGrass * 0.75f;
+                Grass[levelthree].PO.Position.X = startGrassX + (i * spaceBetweenGrass);
+                Grass[levelthree].PO.Position.Z = startGrassZ - (spaceBetweenGrass * 1.7f);
             }
 
             for (int i = 0; i < Grass.Length; i++)
             {
                 GrassX[i] = Grass[i].Position.X;
-                Grass[i].Position.Z = -200;
+                Grass[i].PO.Position.Y = Base.Position.Y;
+                Grass[i].PO.Rotation.X = -MathHelper.PiOver2;
             }
 
-            for (int i = 0; i < Blockades.Length; i++)
+            for (int i = 0; i < Barricades.Length; i++)
             {
-                Blockades[i].Position = new Vector3(startBlockX, startBlockY +
-                    (i * (spaceBetweenBlocks + (i * spaceBetweenBlocks * 0.95f))), -150);
-                BlocksX[i] = Blockades[i].Position.X;
+                Barricades[i].Position = new Vector3(startBlockX, startBlockY,
+                    (i * spaceBetweenBlocks) + 100);
             }
         }
 
@@ -108,11 +111,8 @@ namespace Choplifter
         {
             for (int i = 0; i < Grass.Length / 3; i++)
             {
-                int leveltwo = i + (int)(Grass.Length / 3);
-                int levelthree = i + (int)(Grass.Length / 3) * 2;
-
-                Grass[leveltwo].Velocity.X = -PlayerRef.Velocity.X * 0.25f;
-                Grass[levelthree].Velocity.X = -PlayerRef.Velocity.X * 0.5f;
+                int leveltwo = i + (Grass.Length / 3);
+                int levelthree = i + (Grass.Length / 3) * 2;
             }
 
             for (int i = 0; i < Grass.Length; i++)
@@ -121,7 +121,7 @@ namespace Choplifter
                 {
                     if (Grass[i].Position.X - spaceBetweenGrass > TheCamera.Position.X + GrassEdge)
                     {
-                        Grass[i].Position.X -= 1200 + spaceBetweenGrass * 2;
+                        Grass[i].PO.Position.X -= 1200 + spaceBetweenGrass * 2;
                     }
                 }
 
@@ -129,16 +129,16 @@ namespace Choplifter
                 {
                     if (Grass[i].Position.X + spaceBetweenGrass < TheCamera.Position.X - GrassEdge)
                     {
-                        Grass[i].Position.X += 1200 + spaceBetweenGrass * 2;
+                        Grass[i].PO.Position.X += 1200 + spaceBetweenGrass * 2;
                     }
                 }
             }
 
-            for (int i = 0; i < Blockades.Length; i++)
-            {
-                Blockades[i].PO.Position.X = BlocksX[i] - ((
-                    TheCamera.Position.X - BlocksX[i]) * (0.2f * i));
-            }
+            //for (int i = 0; i < Blockades.Length; i++)
+            //{
+            //    Blockades[i].PO.Position.X = BlocksX[i] - ((
+            //        TheCamera.Position.X - BlocksX[i]) * (0.2f * i));
+            //}
 
             base.Update(gameTime);
         }

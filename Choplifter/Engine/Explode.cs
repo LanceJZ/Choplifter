@@ -37,7 +37,7 @@ namespace Choplifter
 
         public void LoadContent()
         {
-            Cube = Helper.LoadModel("Core/Cube");
+            Cube = Helper.LoadModel("Helper/Cube");
         }
 
         public void BeginRun()

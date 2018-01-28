@@ -1,15 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
-using XnaModel = Microsoft.Xna.Framework.Graphics.Model;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Audio;
 using System.Collections.Generic;
 using System;
-using Engine;
 
-namespace MGChoplifter.Entities
+namespace Choplifter
 {
-    public class Person : AModel
+    class Person : ModelEntity
     {
         enum CurrentState
         {
@@ -26,88 +24,102 @@ namespace MGChoplifter.Entities
 
         CurrentState State;
         CurrentMode Mode;
+        Camera CameraRef;
         Timer Attention;
-        ThePlayer PlayerRef;
-        public AModel[] Arms = new AModel[2];
-        public AModel[] Legs = new AModel[2];
+        Player PlayerRef;
+        Background BackgroundRef;
+        public ModelEntity[] Arms = new ModelEntity[2];
+        public ModelEntity[] Legs = new ModelEntity[2];
+        Model PersonManModel;
+        Model PersonArmModel;
+        Model PersonLegModel;
         float Seperation;
         float MaxSpeed;
-        float RightBound;
+        float LeftBound;
 
-        public Person(Game game, ThePlayer player, XnaModel model) : base(game, model)
+        public Person(Game game, Camera camera, GameLogic gameLogic) :
+            base(game, camera)
         {
-            PlayerRef = player;
-            Attention = new Timer(game, Core.RandomMinMax(0.25f, 2));
+            CameraRef = camera;
+            PlayerRef = gameLogic.PlayerRef;
+            BackgroundRef = gameLogic.BackgroundRef;
+            Attention = new Timer(game, Helper.RandomMinMax(0.25f, 2));
         }
 
         public override void Initialize()
         {
-            Radius = 10;
+            PO.Radius = 10;
 
-            Position.Z = Core.RandomMinMax(-49, -1);
-            Seperation = Core.RandomNumber.Next(20, 200);
-            MaxSpeed = Core.RandomNumber.Next(10, 25);
-            RightBound = Core.RandomMinMax(-10000, -9000);
-
-            for (int i = 0; i < 2; i++)
-            {
-                Arms[i] = new AModel(Game);
-                Legs[i] = new AModel(Game);
-            }
-
-            for (int i = 0; i < 2; i++)
-            {
-                Arms[i].AddAsChildOf(this);
-                Legs[i].AddAsChildOf(this);
-
-                Arms[i].Position.Y = 7;
-                Legs[i].Position.Y = 0;
-            }
-
-            Arms[0].Position.X = -2;
-            Arms[1].Position.X = 2;
-
-            Legs[0].Position.X = -1;
-            Legs[1].Position.X = 1;
-
-            Active = false;
+            PO.Position.Z = Helper.RandomMinMax(-49, -1);
+            Seperation = Helper.RandomMinMax(20, 200);
+            MaxSpeed = Helper.RandomMinMax(10, 25);
+            LeftBound = Helper.RandomMinMax(-10000, -9000);
 
             base.Initialize();
         }
 
+        protected override void LoadContent()
+        {
+            PersonManModel = Helper.LoadModel("PersonMan");
+            PersonArmModel = Helper.LoadModel("PersonArm");
+            PersonLegModel = Helper.LoadModel("PersonLeg");
+        }
+
+        public override void BeginRun()
+        {
+            SetModel(PersonManModel);
+
+            for (int i = 0; i < 2; i++)
+            {
+                Arms[i] = new ModelEntity(Game, CameraRef, PersonArmModel);
+                Legs[i] = new ModelEntity(Game, CameraRef, PersonLegModel);
+                Arms[i].AddAsChildOf(this);
+                Legs[i].AddAsChildOf(this);
+                Arms[i].PO.Position.Y = 3.5f;
+                Legs[i].PO.Position.Y = 0;
+            }
+
+            Arms[0].PO.Position.X = -1.5f;
+            Arms[1].PO.Position.X = 1.5f;
+
+            Legs[0].PO.Position.X = -0.5f;
+            Legs[1].PO.Position.X = 0.5f;
+
+            Enabled = false;
+
+            base.BeginRun();
+        }
+
         public override void Update(GameTime gameTime)
         {
-            if (Active)
+            switch (Mode)
             {
-                switch (Mode)
-                {
-                    case CurrentMode.Waiting:
-                        if (Attention.Elapsed)
-                        {
-                            Attention.Reset();
-                            ChaseOrWave();
-                        }
-                        break;
+                case CurrentMode.Waiting:
+                    if (Attention.Elapsed)
+                    {
+                        Attention.Reset();
+                        ChaseOrWave();
+                    }
+                    break;
 
-                    case CurrentMode.DroppedOff:
-                        RunToBase();
-                        break;
+                case CurrentMode.DroppedOff:
+                    RunToBase();
+                    break;
 
-                    case CurrentMode.Enter:
-                        Entering();
-                        break;
-                }
+                case CurrentMode.Enter:
+                    Entering();
+                    break;
+            }
 
-                switch (State)
-                {
-                    case CurrentState.Running:
-                        Running();
-                        break;
+            switch (State)
+            {
+                case CurrentState.Running:
+                    Running();
+                    break;
 
-                    case CurrentState.Waving:
-                        Waving();
-                        break;
-                }
+                case CurrentState.Waving:
+                    Waving();
+                    break;
             }
 
             base.Update(gameTime);
@@ -116,25 +128,25 @@ namespace MGChoplifter.Entities
         public void Spawn(Vector3 position, bool dropped)
         {
             base.Spawn(position);
-            Position.Y = position.Y;
+            PO.Position.Y = position.Y;
 
             if (dropped)
             {
                 Mode = CurrentMode.DroppedOff;
-                Position.X = position.X;
+                PO.Position.X = position.X;
                 SwitchToRunning();
             }
             else
             {
                 Mode = CurrentMode.Waiting;
-                Position.X = position.X + Core.RandomMinMax(-20, 20);
+                PO.Position.X = position.X + Helper.RandomMinMax(-20, 20);
                 SwitchToWaving();
             }
         }
 
         void Entering()
         {
-            if (PlayerRef.Position.Y > PlayerRef.BoundLowY + 10)
+            if (PlayerRef.Position.Y > PlayerRef.BoundLow + 10)
             {
                 Mode = CurrentMode.Waiting;
                 State = CurrentState.Waving;
@@ -147,15 +159,15 @@ namespace MGChoplifter.Entities
             }
 
             if (Position.X > PlayerRef.Position.X)
-                Velocity.X = -MaxSpeed;
+                PO.Velocity.X = -MaxSpeed;
             else
-                Velocity.X = MaxSpeed;
+                PO.Velocity.X = MaxSpeed;
 
-            if (CirclesIntersect(PlayerRef))
+            if (PO.CirclesIntersect(PlayerRef.PO))
             {
                 if (PlayerRef.PickUpPerson())
                 {
-                    Active = false;
+                    Enabled = false;
                 }
                 else
                 {
@@ -172,19 +184,20 @@ namespace MGChoplifter.Entities
                 SwitchToRunning();
             }
 
-            Velocity.X = MaxSpeed;
+            PO.Velocity.X = MaxSpeed;
 
             if (Position.X > 144.5f)
-                Active = false;
+                Enabled = false;
         }
 
         void ChaseOrWave()
         {
-            Velocity.X = 0;
+            PO.Velocity.X = 0;
 
-            if (PlayerRef.Position.X > RightBound)
+            if (PlayerRef.Position.X > LeftBound &&
+                PlayerRef.Position.X < BackgroundRef.BarricadePositionX)
             {
-                if (PlayerRef.Position.Y < PlayerRef.BoundLowY + 10)
+                if (PlayerRef.Position.Y < PlayerRef.BoundLow + 10)
                 {
                     Mode = CurrentMode.Enter;
                     return;
@@ -194,22 +207,26 @@ namespace MGChoplifter.Entities
 
                 if (differnceX > Seperation)
                 {
-                    Velocity.X = MathHelper.Clamp(differnceX, -MaxSpeed, MaxSpeed);
+                    PO.Velocity.X = MathHelper.Clamp(differnceX, -MaxSpeed, MaxSpeed);
 
                     if (State == CurrentState.Waving)
                     {
                         SwitchToRunning();
+                        return;
                     }
                 }
                 else if (differnceX < -Seperation)
                 {
-                    Velocity.X = MathHelper.Clamp(differnceX, -MaxSpeed, MaxSpeed);
+                    PO.Velocity.X = MathHelper.Clamp(differnceX, -MaxSpeed, MaxSpeed);
 
                     if (State == CurrentState.Waving)
                     {
                         SwitchToRunning();
+                        return;
                     }
                 }
+
+                SwitchToWaving();
             }
             else
             {
@@ -223,71 +240,71 @@ namespace MGChoplifter.Entities
 
         void SwitchToRunning()
         {
-            Arms[0].Rotation.X = -MathHelper.PiOver2;
-            Arms[1].Rotation.X = MathHelper.PiOver2;
-            Legs[0].RotationVelocity.X = MathHelper.Pi;
-            Legs[1].RotationVelocity.X = -MathHelper.Pi;
-            Rotation.Y = MathHelper.PiOver2;
+            Arms[0].PO.Rotation.X = MathHelper.TwoPi - MathHelper.PiOver2;
+            Arms[1].PO.Rotation.X = MathHelper.PiOver2;
+            Legs[0].PO.RotationVelocity.X = MathHelper.Pi;
+            Legs[1].PO.RotationVelocity.X = -MathHelper.Pi;
+            PO.Rotation.Y = MathHelper.PiOver2;
             State = CurrentState.Running;
         }
 
         void SwitchToWaving()
         {
-            Arms[0].Rotation.X = MathHelper.Pi - MathHelper.PiOver4;
-            Arms[1].Rotation.X = MathHelper.Pi + MathHelper.PiOver4;
-            Arms[0].RotationVelocity.X = MathHelper.Pi;
-            Arms[1].RotationVelocity.X = -MathHelper.Pi;
-            Rotation.Y = 0;
+            Arms[0].PO.Rotation.X = MathHelper.Pi - MathHelper.PiOver4;
+            Arms[1].PO.Rotation.X = MathHelper.Pi + MathHelper.PiOver4;
+            Arms[0].PO.RotationVelocity.X = MathHelper.Pi;
+            Arms[1].PO.RotationVelocity.X = -MathHelper.Pi;
+            PO.Rotation.Y = 0;
             State = CurrentState.Waving;
         }
 
         void Running()
         {
-            foreach(AModel arm in Arms)
+            foreach (ModelEntity arm in Arms)
             {
-                if (arm.Rotation.X < -MathHelper.PiOver4)
-                {
-                    arm.RotationVelocity.X = MathHelper.Pi;
-                }
-
-                if (arm.Rotation.X > MathHelper.PiOver4)
-                {
-                    arm.RotationVelocity.X = -MathHelper.Pi;
-                }
+                arm.PO.RotationVelocity.X = SwingDown(arm.Rotation.X, arm.RotationVelocity.X);
             }
 
-            foreach (AModel leg in Legs)
+            foreach (ModelEntity leg in Legs)
             {
-                if (leg.Rotation.X < -MathHelper.PiOver4)
-                {
-                    leg.RotationVelocity.X = MathHelper.Pi;
-                }
-
-                if (leg.Rotation.X > MathHelper.PiOver4)
-                {
-                    leg.RotationVelocity.X = -MathHelper.Pi;
-                }
+                leg.PO.RotationVelocity.X = SwingDown(leg.Rotation.X, leg.RotationVelocity.X);
             }
+        }
+
+        float SwingDown (float angle, float velocity)
+        {
+            if (angle < MathHelper.TwoPi - MathHelper.PiOver4 &&
+                angle > MathHelper.Pi)
+            {
+                velocity = MathHelper.Pi;
+            }
+
+            if (angle > MathHelper.PiOver4 && angle < MathHelper.Pi)
+            {
+                velocity = -MathHelper.Pi;
+            }
+
+            return velocity;
         }
 
         void Waving()
         {
-            foreach (AModel leg in Legs)
+            foreach (ModelEntity leg in Legs)
             {
-                leg.Rotation.X = 0;
-                leg.RotationVelocity.X = 0;
+                leg.PO.Rotation.X = 0;
+                leg.PO.RotationVelocity.X = 0;
             }
 
-            foreach (AModel arm in Arms)
+            foreach (ModelEntity arm in Arms)
             {
                 if (arm.Rotation.X < MathHelper.Pi - MathHelper.PiOver4)
                 {
-                    arm.RotationVelocity.X = MathHelper.Pi;
+                    arm.PO.RotationVelocity.X = MathHelper.Pi;
                 }
 
                 if (arm.Rotation.X > MathHelper.Pi + MathHelper.PiOver4)
                 {
-                    arm.RotationVelocity.X = -MathHelper.Pi;
+                    arm.PO.RotationVelocity.X = -MathHelper.Pi;
                 }
             }
         }

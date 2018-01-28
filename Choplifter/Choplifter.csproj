@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <AssemblyVersion>1.241.27.0</AssemblyVersion>
+    <AssemblyVersion>1.357.28.0</AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -70,9 +70,14 @@
     <Compile Include="Engine\Timer.cs" />
     <Compile Include="Engine\Words.cs" />
     <Compile Include="Entities\Background.cs" />
+    <Compile Include="Entities\HouseControl.cs" />
+    <Compile Include="Entities\Person.cs" />
     <Compile Include="Entities\Shot.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Entities\StarControl.cs" />
+    <Compile Include="Entities\Tank.cs" />
+    <Compile Include="Entities\TankTreds.cs" />
+    <Compile Include="Entities\TankTurret.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="GameLogic.cs" />
     <Compile Include="Program.cs" />
