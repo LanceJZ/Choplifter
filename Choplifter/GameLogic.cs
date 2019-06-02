@@ -20,9 +20,9 @@ namespace Choplifter
     {
         Camera TheCamera;
         Background TheBackground;
+        HouseControl TheHouses;
+        Tank TheTank;
         Player ThePlayer;
-
-
 
         Timer FPSTimer;
         float FPSFrames = 0;
@@ -33,15 +33,17 @@ namespace Choplifter
         public GameState CurrentMode { get => GameMode; }
         public Player PlayerRef { get => ThePlayer; }
         public Background BackgroundRef { get => TheBackground; }
+        public HouseControl HousesRef { get => TheHouses; }
 
         public GameLogic(Game game, Camera camera) : base(game)
         {
             TheCamera = camera;
 
-            ThePlayer = new Player(game, camera);
+            ThePlayer = new Player(game, camera, this);
             TheBackground = new Background(game, camera, this);
+            TheHouses = new HouseControl(game, camera, this);
 
-
+            TheTank = new Tank(game, camera, this);
 
             FPSTimer = new Timer(game, 1);
             // Screen resolution is 1200 X 900.
@@ -67,6 +69,10 @@ namespace Choplifter
 
         public void BeginRun()
         {
+            Vector3 pos = new Vector3(TheBackground.BarricadePositionX - 100,
+                TheBackground.BasePosition.Position.Y, 0);
+            //TheTank.Spawn(pos);
+
         }
 
         public override void Update(GameTime gameTime)

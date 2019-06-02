@@ -10,7 +10,6 @@ namespace Choplifter
     class TankTurret : ModelEntity
     {
         Player PlayerRef;
-        Camera CameraRef;
         ModelEntity Barral;
         Shot TankShot;
         Timer ShotTimer;
@@ -18,7 +17,6 @@ namespace Choplifter
         public TankTurret(Game game, Camera camera, GameLogic gameLogic) : base(game, camera)
         {
             PlayerRef = gameLogic.PlayerRef;
-            CameraRef = camera;
             Barral = new ModelEntity(game, camera);
             ShotTimer = new Timer(game, 4.1f);
             TankShot = new Shot(game, camera);
@@ -26,20 +24,20 @@ namespace Choplifter
 
         public override void Initialize()
         {
-            Barral.AddAsChildOf(this);
-            Barral.PO.Position.X = 8;
 
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
-            LoadModel("Models/CLTankTurret");
-            Barral.LoadModel("Models/CLTankBarral");
+            LoadModel("TankTurret");
+            Barral.LoadModel("TankBarral");
         }
 
         public override void BeginRun()
         {
+            Barral.AddAsChildOf(this);
+            Barral.PO.Position.X = 8;
             TankShot.PO.Acceleration.Y = -50;
 
             base.BeginRun();

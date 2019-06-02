@@ -76,21 +76,18 @@ namespace Choplifter
         /// <summary>
         /// Enabled causes the class to update. If base of Sprite, enables sprite to be drawn.
         /// </summary>
-        public bool Active
+        public new bool Enabled
         {
-            get => Enabled;
+            get => base.Enabled;
 
             set
             {
-                Enabled = value;
+                base.Enabled = value;
 
-                if (IsParent)
+                foreach (PositionedObject child in ChildrenPOs)
                 {
-                    foreach (PositionedObject child in ChildrenPOs)
-                    {
-                        if (child.ActiveDependent)
-                            child.Active = value;
-                    }
+                    if (child.ActiveDependent)
+                        child.Enabled = value;
                 }
             }
         }

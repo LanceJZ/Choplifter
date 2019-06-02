@@ -24,7 +24,6 @@ namespace Choplifter
 
         CurrentState State;
         CurrentMode Mode;
-        Camera CameraRef;
         Timer Attention;
         Player PlayerRef;
         Background BackgroundRef;
@@ -40,7 +39,6 @@ namespace Choplifter
         public Person(Game game, Camera camera, GameLogic gameLogic) :
             base(game, camera)
         {
-            CameraRef = camera;
             PlayerRef = gameLogic.PlayerRef;
             BackgroundRef = gameLogic.BackgroundRef;
             Attention = new Timer(game, Helper.RandomMinMax(0.25f, 2));
@@ -48,7 +46,7 @@ namespace Choplifter
 
         public override void Initialize()
         {
-            PO.Radius = 10;
+            PO.Radius = 4;
 
             PO.Position.Z = Helper.RandomMinMax(-49, -1);
             Seperation = Helper.RandomMinMax(20, 200);
@@ -125,21 +123,24 @@ namespace Choplifter
             base.Update(gameTime);
         }
 
+        public override void Draw(GameTime gameTime)
+        {
+            base.Draw(gameTime);
+        }
+
         public void Spawn(Vector3 position, bool dropped)
         {
             base.Spawn(position);
-            PO.Position.Y = position.Y;
 
             if (dropped)
             {
                 Mode = CurrentMode.DroppedOff;
-                PO.Position.X = position.X;
                 SwitchToRunning();
             }
             else
             {
                 Mode = CurrentMode.Waiting;
-                PO.Position.X = position.X + Helper.RandomMinMax(-20, 20);
+                PO.Position.X = position.X + Helper.RandomMinMax(-10, 10);
                 SwitchToWaving();
             }
         }
@@ -186,8 +187,10 @@ namespace Choplifter
 
             PO.Velocity.X = MaxSpeed;
 
-            if (Position.X > 144.5f)
+            if (Position.X > 119.25f)
+            {
                 Enabled = false;
+            }
         }
 
         void ChaseOrWave()

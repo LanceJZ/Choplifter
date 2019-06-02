@@ -7,7 +7,7 @@ using System;
 
 namespace Choplifter
 {
-    class TankTreds : PositionedObject
+    class TankTred : PositionedObject
     {
         ModelEntity[] TredAnimations = new ModelEntity[2];
         Camera CameraRef;
@@ -15,7 +15,7 @@ namespace Choplifter
 
         public bool Moving;
 
-        public TankTreds(Game game, Camera camera) : base(game)
+        public TankTred(Game game, Camera camera) : base(game)
         {
             CameraRef = camera;
             AnimationTimer = new Timer(game, 0.1f);
@@ -23,27 +23,25 @@ namespace Choplifter
             for (int i = 0; i < 2; i++)
             {
                 TredAnimations[i] = new ModelEntity(game, camera);
-                TredAnimations[i].PO.AddAsChildOf(this);
+                TredAnimations[i].PO.AddAsChildOf(this, false, true);
             }
         }
 
         public override void Initialize()
         {
-            base.Initialize();
             LoadContent();
+            base.Initialize();
         }
 
         public void LoadContent()
         {
-            TredAnimations[0].SetModel(Game.Content.Load<Model>("Models/TankTred1"));
-            TredAnimations[1].SetModel(Game.Content.Load<Model>("Models/TankTred2"));
+            TredAnimations[0].LoadModel("TankTred1");
+            TredAnimations[1].LoadModel("TankTred2");
         }
 
         public override void BeginRun()
         {
             base.BeginRun();
-
-            TredAnimations[1].Enabled = false;
         }
 
         public override void Update(GameTime gameTime)
@@ -58,6 +56,20 @@ namespace Choplifter
                 {
                     TredAnimations[i].Enabled = !TredAnimations[i].Enabled;
                 }
+            }
+        }
+
+        public void Spawn()
+        {
+            TredAnimations[0].Enabled = false;
+            TredAnimations[1].Enabled = true;
+        }
+
+        public void Disable()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                TredAnimations[i].Enabled = false;
             }
         }
     }

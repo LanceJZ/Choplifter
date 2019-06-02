@@ -7,7 +7,7 @@ namespace Choplifter
 {
     class StarControl : GameComponent
     {
-        ModelEntity[] Stars = new ModelEntity[50];
+        ModelEntity[] Stars = new Cube[50];
         Model StarModel;
         Camera TheCamera;
         float[] StarsX;
@@ -28,7 +28,6 @@ namespace Choplifter
 
         public void LoadContent()
         {
-            StarModel = Helper.LoadModel("Helper/Cube");
             BeginRun();
         }
 
@@ -38,7 +37,7 @@ namespace Choplifter
 
             for (int i = 0; i < Stars.Length; i++)
             {
-                Stars[i] = new ModelEntity(Game, TheCamera, StarModel);
+                Stars[i] = new Cube(Game, TheCamera);
                 Stars[i].Position = new Vector3(Helper.RandomMinMax(-600, 600),
                     Helper.RandomMinMax(-125, 225), -100);
                 Stars[i].RotationVelocity = new Vector3(Helper.RandomMinMax(-spinSpeed, spinSpeed),

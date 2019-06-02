@@ -11,9 +11,8 @@ namespace Choplifter
     {
         Player PlayerRef;
         GameLogic GameLogicRef;
-        Camera CameraRef;
         TankTurret Turret;
-        TankTreds[] Treds = new TankTreds[2];
+        TankTred[] Treds = new TankTred[2];
         float MaxSpeed;
         float Seperation;
         float RightBound;
@@ -25,11 +24,10 @@ namespace Choplifter
             GameLogicRef = gameLogic;
             PlayerRef = gameLogic.PlayerRef;
             Turret = new TankTurret(game, camera, gameLogic);
-            Turret.AddAsChildOf(this);
 
             for (int i = 0; i < 2; i++)
             {
-                Treds[i] = new TankTreds(game, camera);
+                Treds[i] = new TankTred(game, camera);
                 Treds[i].AddAsChildOf(PO);
             }
         }
@@ -47,20 +45,29 @@ namespace Choplifter
 
         protected override void LoadContent()
         {
-            LoadModel("Models/TankBody");
+            LoadModel("TankBody");
+
+            base.LoadContent();
         }
 
         public override void BeginRun()
         {
             Treds[0].Position = new Vector3(0, -2, -16);
             Treds[1].Position = new Vector3(0, -2, 16);
+
+            Turret.AddAsChildOf(this);
+            Turret.PO.Position.Y = 5;
+
+            Disable();
+
+            base.BeginRun();
         }
 
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
-            foreach (TankTreds tred in Treds)
+            foreach (TankTred tred in Treds)
             {
                 tred.Moving = false;
             }
@@ -72,6 +79,21 @@ namespace Choplifter
         public override void Spawn(Vector3 position)
         {
             base.Spawn(position);
+
+            for (int i = 0; i < 2; i++)
+            {
+                Treds[i].Spawn();
+            }
+        }
+
+        public void Disable()
+        {
+            Enabled = false;
+
+            for (int i = 0; i < 2; i++)
+            {
+                Treds[i].Disable();
+            }
         }
 
         public void BumpedR()
@@ -100,7 +122,7 @@ namespace Choplifter
             {
                 PO.Velocity.X = MathHelper.Clamp(differnceX * 0.1f, -MaxSpeed, MaxSpeed);
 
-                foreach (TankTreds tred in Treds)
+                foreach (TankTred tred in Treds)
                 {
                     tred.Moving = true;
                 }
@@ -111,7 +133,7 @@ namespace Choplifter
             {
                 PO.Velocity.X = MathHelper.Clamp(differnceX * 0.1f, -MaxSpeed, MaxSpeed);
 
-                foreach (TankTreds tred in Treds)
+                foreach (TankTred tred in Treds)
                 {
                     tred.Moving = true;
                 }

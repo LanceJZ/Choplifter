@@ -6,7 +6,7 @@ using System;
 
 namespace Choplifter
 {
-    class Shot : ModelEntity
+    class Shot : Cube
     {
         Timer LifeTimer;
 
@@ -25,7 +25,6 @@ namespace Choplifter
 
         protected override void LoadContent()
         {
-            LoadModel("Core/Cube");
             base.LoadContent();
         }
 

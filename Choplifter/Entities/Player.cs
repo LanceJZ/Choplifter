@@ -25,14 +25,10 @@ namespace Choplifter
         };
 
         #region Fields
+        GameLogic LogicRef;
         ModelEntity Blade;
         ModelEntity Rotor;
         Shot[] TheShots = new Shot[5];
-        //Person[] ThePeopleOnboard = new Person[4];
-        Model ShotModel;
-        Model PersonManModel;
-        Model PersonArmModel;
-        Model PersonLegModel;
         Timer FireTimer;
         Timer TurnTimer;
         Timer UnloadTimer;
@@ -50,9 +46,10 @@ namespace Choplifter
         float MoveHorizontal;
         float BoundLowY = -140;
         float BoundHighY = 176;
-        float BoundLeftX = -6600 * 2;
+        float BoundLeftX = -3600 * 2;
         float BoundRightX = 145.5f;
-        float UnloadX = 10.5f;
+        float UnloadXMin = 60.25f;
+        float UnloadXMax = 133.5f;
         int ShotLimit;
         int NumberOfPassengers;
         int PassengerLimit = 4;
@@ -67,8 +64,9 @@ namespace Choplifter
         public float BoundLow { get => BoundLowY; }
         #endregion
         #region Base Methods
-        public Player(Game game, Camera camera) : base(game, camera)
+        public Player(Game game, Camera camera, GameLogic gameLogic) : base(game, camera)
         {
+            LogicRef = gameLogic;
             Blade = new ModelEntity(game, camera);
             Rotor = new ModelEntity(game, camera);
             FireTimer = new Timer(game, FireRate);
@@ -79,7 +77,7 @@ namespace Choplifter
 
         public override void Initialize()
         {
-            PO.Radius = 26;
+            PO.Radius = 13;
             Facing = Direction.Right;
             State = CurrentState.Flight;
             NumberOfPassengers = 0; //TODO: For testing. Should be zero.
@@ -104,18 +102,6 @@ namespace Choplifter
             Blade.RotationVelocity = new Vector3(0, 20, 0);
             Rotor.Position = new Vector3(-13, 4, -1);
             Rotor.RotationVelocity = new Vector3(0, 0, 24);
-
-
-            //for (int i = 0; i < People.Length; i++)
-            //{
-            //    People[i] = new Person(Game, this, PersonMan);
-
-            //    for (int ii = 0; ii < 2; ii++)
-            //    {
-            //        People[i].Arms[ii].SetModel(PersonArm);
-            //        People[i].Legs[ii].SetModel(PersonLeg);
-            //    }
-            //}
 
             for (int i = 0; i < Shots.Length; i++)
             {
@@ -157,7 +143,8 @@ namespace Choplifter
         #region Private Methods
         void CheckToUnload()
         {
-            if (Position.Y < -215 && Velocity == Vector3.Zero && Position.X > UnloadX)
+            if (Position.Y <= BoundLowY + 0.1f && Velocity == Vector3.Zero &&
+                Position.X > UnloadXMin && Position.X < UnloadXMax)
             {
                 if (State == CurrentState.Flight)
                     UnloadTimer.Reset();
@@ -185,9 +172,10 @@ namespace Choplifter
 
                 if (NumberOfPassengers > 0)
                 {
-                    //Vector3 pos = new Vector3(Position.X, BoundLowY - 5, People[NumberOfPassengers - 1].Position.Z);
-                    //People[NumberOfPassengers - 1].Spawn(pos, true);
-                    //NumberOfPassengers--;
+                    NumberOfPassengers--;
+
+                    LogicRef.HousesRef.SpawnPeople(new Vector3(Position.X,
+                        BoundLow - 5, -10), true);
                 }
             }
         }

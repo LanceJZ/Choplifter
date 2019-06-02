@@ -13,6 +13,7 @@ namespace Choplifter
     {
         #region Fields
         string ModelFileName;
+        List<ModelEntity> Children = new List<ModelEntity>();
         protected Camera TheCamera;
         protected PositionedObject ThePO;
         protected Model TheModel;
@@ -32,6 +33,8 @@ namespace Choplifter
         public float Alpha = 1;
         #endregion
         #region Properties
+        public Camera CameraRef { get => TheCamera; }
+
         public virtual Vector3 Position
         {
             get => ThePO.Position;
@@ -110,7 +113,18 @@ namespace Choplifter
         public new bool Enabled
         {
             get => base.Enabled;
-            set { base.Enabled = value; ThePO.Enabled = value; }
+            set
+            {
+                base.Enabled = value;
+                Visible = value;
+
+                foreach(ModelEntity me in Children)
+                {
+                    me.Visible = value;
+                }
+
+                ThePO.Enabled = value;
+            }
         }
         #endregion
         #region Constructor
@@ -272,25 +286,43 @@ namespace Choplifter
         #region Draw
         public override void Draw(GameTime gameTime)
         {
-            if (TheModel != null)
+            if (TheModel == null)
             {
-                Game.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                return;
+            }
 
-                foreach (ModelMesh mesh in TheModel.Meshes)
+            if (TheCamera == null)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    "The Camera is not setup (null) on the class. " + this);
+
+                return;
+            }
+
+            if (BoneTransforms == null)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    "The BoneTransforms is not setup (null) on the class. " + this);
+
+                return;
+            }
+
+            Game.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+            foreach (ModelMesh mesh in TheModel.Meshes)
+            {
+                foreach (BasicEffect basicEffect in mesh.Effects)
                 {
-                    foreach (BasicEffect basicEffect in mesh.Effects)
-                    {
-                        basicEffect.World = BoneTransforms[mesh.ParentBone.Index];
-                        basicEffect.View = TheCamera.View;
-                        basicEffect.Projection = TheCamera.Projection;
-                        basicEffect.DiffuseColor = DefuseColor;
-                        basicEffect.EmissiveColor = EmissiveColor;
-                        basicEffect.Alpha = Alpha;
-                        basicEffect.EnableDefaultLighting();
-                    }
-
-                    mesh.Draw();
+                    basicEffect.World = BoneTransforms[mesh.ParentBone.Index];
+                    basicEffect.View = TheCamera.View;
+                    basicEffect.Projection = TheCamera.Projection;
+                    basicEffect.DiffuseColor = DefuseColor;
+                    basicEffect.EmissiveColor = EmissiveColor;
+                    basicEffect.Alpha = Alpha;
+                    basicEffect.EnableDefaultLighting();
                 }
+
+                mesh.Draw();
             }
 
             base.Draw(gameTime);
@@ -333,11 +365,12 @@ namespace Choplifter
         #region Helper Methods
         public void AddAsChildOf(ModelEntity parent)
         {
-            ThePO.AddAsChildOf(parent.ThePO);
+            AddAsChildOf(parent, true);
         }
 
         public void AddAsChildOf(ModelEntity parent, bool activeDepedent)
         {
+            parent.Children.Add(this);
             ThePO.AddAsChildOf(parent.ThePO, activeDepedent);
         }
         /// <summary>

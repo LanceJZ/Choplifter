@@ -21,8 +21,8 @@ namespace Choplifter
         Model HouseModel;
         Model HouseOpenModel;
 
-        float Height = -230;
-        float StartX = -6000;
+        float Height;
+        float StartX = -3000;
         float DistanceBetween = 600;
 
         public HouseControl(Game game, Camera camera, GameLogic gameLogic) : base(game)
@@ -36,6 +36,8 @@ namespace Choplifter
 
         public override void Initialize()
         {
+            Height = LogicRef.BackgroundRef.BasePosition.Position.Y;
+
             base.Initialize();
             LoadContent();
             BeginRun();
@@ -43,8 +45,8 @@ namespace Choplifter
 
         public void LoadContent()
         {
-            HouseModel = Helper.LoadModel("CLHouse");
-            HouseOpenModel = Helper.LoadModel("CLHouseOpen");
+            HouseModel = Helper.LoadModel("House");
+            HouseOpenModel = Helper.LoadModel("HouseDistroyed");
         }
 
         public void BeginRun()
@@ -53,8 +55,8 @@ namespace Choplifter
             {
                 Houses[i] = new ModelEntity(Game, CameraRef, HouseModel);
                 OpenHouses[i] = new ModelEntity(Game, CameraRef, HouseOpenModel);
-                Houses[i].Position = new Vector3(StartX - (i * DistanceBetween), Height, -100);
-                Houses[i].PO.Radius = 32;
+                Houses[i].Position = new Vector3(StartX - (i * DistanceBetween), Height, 0);
+                Houses[i].PO.Radius = 15;
                 OpenHouses[i].Position = Houses[i].Position;
                 OpenHouses[i].Enabled = false;
             }
@@ -77,7 +79,14 @@ namespace Choplifter
                                 Houses[i].Enabled = false;
                                 OpenHouses[i].Enabled = true;
                                 shot.Enabled = false;
-                                SpawnPeople(Houses[i].Position);
+
+                                for (int p = 0; p < 4; p++)
+                                {
+                                    Vector3 pos = Houses[i].Position;
+                                    pos.Z += 10;
+                                    SpawnPeople(pos, false);
+                                }
+
                                 break;
                             }
                         }
@@ -86,28 +95,19 @@ namespace Choplifter
             }
         }
 
-        void SpawnPeople(Vector3 position)
+        public void SpawnPeople(Vector3 position, bool dropped)
         {
-            for (int p = 0; p < 4; p++)
+            foreach (Person man in People)
             {
-                bool spawnNew = true;
-
-                foreach (Person man in People)
+                if (!man.Enabled)
                 {
-                    if (!man.Enabled)
-                    {
-                        spawnNew = false;
-                        man.Spawn(position, false);
-                        break;
-                    }
-                }
-
-                if (spawnNew)
-                {
-                    People.Add(new Person(Game, CameraRef, LogicRef));
-                    People.Last().Spawn(position, false);
+                    man.Spawn(position, dropped);
+                    return;
                 }
             }
+
+            People.Add(new Person(Game, CameraRef, LogicRef));
+            People.Last().Spawn(position, dropped);
         }
     }
 }
